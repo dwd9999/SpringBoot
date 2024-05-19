@@ -1,8 +1,12 @@
 package com.ssafy.user.dto;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
+@RequiredArgsConstructor
 public class LoginPwdCheckDto {
     private final String id;
     private final String password;
