@@ -50,7 +50,6 @@ public class UserController {
     public ResponseEntity<UserInfoDto> getUserInfo(@PathVariable("userId") String userId,
                                                    HttpServletRequest request) {
         log.info("Get UserInfo Request Arrived! Request: {}", userId);
-        log.info("Request Token: {}", request.getHeader("access-token"));
         if (!jwtService.checkToken(request.getHeader("access-token"))) {
             throw new UnauthorizedTokenException();
         }

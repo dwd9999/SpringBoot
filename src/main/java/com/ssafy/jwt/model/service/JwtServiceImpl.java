@@ -1,90 +1,141 @@
 package com.ssafy.jwt.model.service;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.crypto.SecretKey;
+import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @PropertySource("classpath:config.properties")
 @Service
 public class JwtServiceImpl implements JwtService {
 
-    @Value("${JWT_SALT}")
-    private static String SALT;
-    private static final int ACCESS_TOKEN_EXPIRE_MINUTES = 30;
-    private static final int REFRESH_TOKEN_EXPIRE_MINUTES = 60;
+    private final Key key;
 
-    @Override
-    public <T> String createAccessToken(String key, T data) {
-        return create(key, data, "access-token", 1000 * 60 * ACCESS_TOKEN_EXPIRE_MINUTES);
+    @Value("${ACCESS_TOKEN_EXPIRE}")
+    private long accessTokenExpire;
+    @Value("${REFRESH_TOKEN_EXPIRE}")
+    private long refreshTokenExpire;
+    @Value("${ACCESS_TOKEN_HEADER}")
+    private String accessTokenHeader;
+    @Value("${REFRESH_TOKEN_HEADER}")
+    private String refreshTokenHeader;
+
+    private static final String ACCESS_TOKEN_SUBJECT = "access-token";
+    private static final String REFRESH_TOKEN_SUBJECT = "refresh-token";
+    private static final String USERNAME_CLAIM = "userId";
+    private static final String BEARER = "Bearer ";
+
+    public JwtServiceImpl(@Value("${JWT_SECRET}") String secret) {
+        byte[] keyBytes = Decoders.BASE64.decode(secret);
+        key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    @Override
-    public <T> String createRefreshToken(String key, T data) {
-        return create(key, data, "refresh-token", 1000 * 60 * 3 * REFRESH_TOKEN_EXPIRE_MINUTES);
-    }
 
     @Override
-    public <T> String create(String key, T data, String subject, long expire) {
-        log.info("Create Claims Start");
-        Claims claims = Jwts.claims()
-                .setSubject(subject)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expire * 1000));
-
-        claims.put(key, data);
-        log.info("Claims: {}", claims);
-
-        return Jwts.builder().setHeaderParam("typ", "JWT")
-                .setClaims(claims)
-                .signWith(generateKey())
+    public String createAccessToken(String userId) {
+        return Jwts.builder()
+                .setSubject(ACCESS_TOKEN_SUBJECT)
+                .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpire))
+                .claim(USERNAME_CLAIM, userId)
+                .signWith(key)
                 .compact();
     }
 
-    private SecretKey generateKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SALT);
-        return Keys.hmacShaKeyFor(keyBytes);
+    @Override
+    public String createRefreshToken() {
+        return Jwts.builder()
+                .setSubject(REFRESH_TOKEN_SUBJECT)
+                .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpire))
+                .signWith(key)
+                .compact();
     }
 
     @Override
-    public Map<String, Object> get() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        String jwt = request.getHeader("access-token");
-        Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(SALT).build().parseClaimsJws(jwt);
-        return claims.getBody();
+    public void updateRefreshToken(String userId, String refreshToken) {
+
     }
 
     @Override
-    public String getUserId() {
-        return (String) get().get("userId");
+    public void destroyRefreshToken(String userId) {
+
     }
 
     @Override
-    public boolean checkToken(String token) {
-        if (token == null || token.isEmpty()) {
+    public void sendAccessAndRefreshToken(HttpServletResponse response, String accessToken, String refreshToken) {
+        response.setStatus(HttpServletResponse.SC_OK);
 
-        }
+        setAccessTokenHeader(response, accessToken);
+        setRefreshTokenHeader(response, refreshToken);
 
+        Map<String, String> tokenMap = new HashMap<>();
+        tokenMap.put(ACCESS_TOKEN_SUBJECT, accessToken);
+        tokenMap.put(REFRESH_TOKEN_SUBJECT, refreshToken);
+    }
+
+    @Override
+    public void sendAccessToken(HttpServletResponse response, String accessToken) {
+        response.setStatus(HttpServletResponse.SC_OK);
+
+        setAccessTokenHeader(response, accessToken);
+
+        Map<String, String> tokenMap = new HashMap<>();
+        tokenMap.put(ACCESS_TOKEN_SUBJECT, accessToken);
+    }
+
+    @Override
+    public Optional<String> extractAccessToken(HttpServletRequest request) {
+        return Optional.ofNullable(request.getHeader(accessTokenHeader))
+                .filter(accessToken ->
+                        accessToken.startsWith(BEARER))
+                .map(accessToken ->
+                        accessToken.replace(BEARER, ""));
+    }
+
+    @Override
+    public Optional<String> extractRefreshToken(HttpServletRequest request) {
+        return Optional.ofNullable(request.getHeader(refreshTokenHeader))
+                .filter(refreshToken ->
+                        refreshToken.startsWith(BEARER))
+                .map(refreshToken ->
+                        refreshToken.replace(BEARER, ""));
+    }
+
+    @Override
+    public Optional<String> extractUserId(String accessToken) {
         try {
-            Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(generateKey()).build().parseClaimsJws(token);
-            log.debug("claims : {}", claims);
-            return true;
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            return false;
+            return Optional.ofNullable(Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(accessToken)
+                    .getBody().getSubject());
         }
+        return Optional.empty();
+    }
+
+    @Override
+    public void setAccessTokenHeader(HttpServletResponse response, String accessToken) {
+        response.setHeader(accessTokenHeader, accessToken);
+    }
+
+    @Override
+    public void setRefreshTokenHeader(HttpServletResponse response, String refreshToken) {
+        response.setHeader(refreshTokenHeader, refreshToken);
+    }
+
+    @Override
+    public boolean isTokenValid(String token) {
+        return false;
     }
 }
