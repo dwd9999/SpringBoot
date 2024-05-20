@@ -1,28 +1,39 @@
 package com.ssafy.jwt.model.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.ssafy.config.dto.JwtDto;
+import com.ssafy.user.dto.UserInfoDto;
+import com.ssafy.user.exception.UserNotFoundException;
+import com.ssafy.user.model.mapper.UserMapper;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Key;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
 @PropertySource("classpath:config.properties")
+@RequiredArgsConstructor
 @Service
 public class JwtServiceImpl implements JwtService {
 
-    private final Key key;
+    private final UserMapper userMapper;
 
+    @Value("${JWT_SECRET}")
+    private String secret;
     @Value("${ACCESS_TOKEN_EXPIRE}")
     private long accessTokenExpire;
     @Value("${REFRESH_TOKEN_EXPIRE}")
@@ -34,27 +45,32 @@ public class JwtServiceImpl implements JwtService {
 
     private static final String ACCESS_TOKEN_SUBJECT = "access-token";
     private static final String REFRESH_TOKEN_SUBJECT = "refresh-token";
-    private static final String USERNAME_CLAIM = "userId";
-    private static final String BEARER = "Bearer ";
-
-    public JwtServiceImpl(@Value("${JWT_SECRET}") String secret) {
-        byte[] keyBytes = Decoders.BASE64.decode(secret);
-        key = Keys.hmacShaKeyFor(keyBytes);
-    }
 
 
     @Override
-    public String createAccessToken(String userId) {
+    public JwtDto createToken(String userId, String email, String role) {
+        String accessToken = createAccessToken(userId, email, role);
+        String refreshToken = createRefreshToken();
+
+        return new JwtDto(accessToken, refreshToken);
+    }
+
+    @Override
+    public String createAccessToken(String userId, String email, String role) {
+        Key key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
         return Jwts.builder()
                 .setSubject(ACCESS_TOKEN_SUBJECT)
                 .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpire))
-                .claim(USERNAME_CLAIM, userId)
+                .claim("userId", userId)
+                .claim("email", email)
+                .claim("role", role)
                 .signWith(key)
                 .compact();
     }
 
     @Override
     public String createRefreshToken() {
+        Key key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
         return Jwts.builder()
                 .setSubject(REFRESH_TOKEN_SUBJECT)
                 .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpire))
@@ -63,79 +79,57 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public void updateRefreshToken(String userId, String refreshToken) {
-
+    public String validateTokenAndGetUserId(String token) {
+        return validateAndParseToken(token)
+                .getBody()
+                .get("userId", String.class);
     }
 
     @Override
-    public void destroyRefreshToken(String userId) {
+    @Transactional
+    public String recreateAccessToken(String oldAccessToken) {
+        Claims claims = decodeJwt(oldAccessToken);
+        String userId = claims.get("userId", String.class);
+        String email = claims.get("email", String.class);
+        String role = claims.get("role", String.class);
 
-    }
-
-    @Override
-    public void sendAccessAndRefreshToken(HttpServletResponse response, String accessToken, String refreshToken) {
-        response.setStatus(HttpServletResponse.SC_OK);
-
-        setAccessTokenHeader(response, accessToken);
-        setRefreshTokenHeader(response, refreshToken);
-
-        Map<String, String> tokenMap = new HashMap<>();
-        tokenMap.put(ACCESS_TOKEN_SUBJECT, accessToken);
-        tokenMap.put(REFRESH_TOKEN_SUBJECT, refreshToken);
-    }
-
-    @Override
-    public void sendAccessToken(HttpServletResponse response, String accessToken) {
-        response.setStatus(HttpServletResponse.SC_OK);
-
-        setAccessTokenHeader(response, accessToken);
-
-        Map<String, String> tokenMap = new HashMap<>();
-        tokenMap.put(ACCESS_TOKEN_SUBJECT, accessToken);
-    }
-
-    @Override
-    public Optional<String> extractAccessToken(HttpServletRequest request) {
-        return Optional.ofNullable(request.getHeader(accessTokenHeader))
-                .filter(accessToken ->
-                        accessToken.startsWith(BEARER))
-                .map(accessToken ->
-                        accessToken.replace(BEARER, ""));
-    }
-
-    @Override
-    public Optional<String> extractRefreshToken(HttpServletRequest request) {
-        return Optional.ofNullable(request.getHeader(refreshTokenHeader))
-                .filter(refreshToken ->
-                        refreshToken.startsWith(BEARER))
-                .map(refreshToken ->
-                        refreshToken.replace(BEARER, ""));
-    }
-
-    @Override
-    public Optional<String> extractUserId(String accessToken) {
-        try {
-            return Optional.ofNullable(Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(accessToken)
-                    .getBody().getSubject());
+        String savedRefreshToken = userMapper.findRefreshTokenByUserId(userId);
+        if (savedRefreshToken == null) {
+            throw new ExpiredJwtException(null, null, "만료된 토큰입니다.");
         }
-        return Optional.empty();
+
+        return createAccessToken(userId, email, role);
     }
 
     @Override
-    public void setAccessTokenHeader(HttpServletResponse response, String accessToken) {
-        response.setHeader(accessTokenHeader, accessToken);
+    @Transactional(readOnly = true)
+    public void validateRefreshToken(String refreshToken, String oldAccessToken) {
+        validateAndParseToken(refreshToken);
+        String userId = decodeJwt(oldAccessToken).get("userId", String.class);
+        String savedRefreshToken = userMapper.findRefreshTokenByUserId(userId);
+        if (!refreshToken.equals(savedRefreshToken)) {
+            throw new ExpiredJwtException(null, null, "만료된 토큰입니다.");
+        }
     }
 
     @Override
-    public void setRefreshTokenHeader(HttpServletResponse response, String refreshToken) {
-        response.setHeader(refreshTokenHeader, refreshToken);
+    public Jws<Claims> validateAndParseToken(String token) {
+        Key key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token);
     }
 
     @Override
-    public boolean isTokenValid(String token) {
-        return false;
+    public Claims decodeJwt(String oldAccessToken) {
+        Key key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(oldAccessToken)
+                .getBody();
     }
+
+
 }
