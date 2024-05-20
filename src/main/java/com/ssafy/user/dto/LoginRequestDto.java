@@ -1,9 +1,13 @@
 package com.ssafy.user.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
+@RequiredArgsConstructor
 public class LoginRequestDto {
     @NotBlank(message = "아이디는 필수 입력 값입니다.")
     private final String id;

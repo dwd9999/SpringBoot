@@ -11,6 +11,7 @@ public class LoginPwdCheckDto {
     private final String id;
     private final String password;
     private final String name;
+    private final String email;
     private final boolean isAdmin;
     private final boolean flag;
 }
