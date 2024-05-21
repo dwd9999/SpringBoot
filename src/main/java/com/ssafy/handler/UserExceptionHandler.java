@@ -9,31 +9,38 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestControllerAdvice
 public class UserExceptionHandler {
 
     @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<String> handleUserAlreadyExistsException(UserAlreadyExistsException e) {
-        return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
+    public ResponseEntity<Map<String, String>> handleUserAlreadyExistsException(UserAlreadyExistsException e) {
+        return responseError(e.getMessage(), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<String> handleUserNotFoundException(UserNotFoundException e) {
-        return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+    public ResponseEntity<Map<String, String>> handleUserNotFoundException(UserNotFoundException e) {
+        return responseError(e.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(UserWrongPasswordException.class)
-    public ResponseEntity<String> handleUserWrongPasswordException(UserWrongPasswordException e) {
-        return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+    public ResponseEntity<Map<String, String>> handleUserWrongPasswordException(UserWrongPasswordException e) {
+        return responseError(e.getMessage(), HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(UnauthorizedTokenException.class)
-    public ResponseEntity<String> handleUnauthorizedTokenException(UnauthorizedTokenException e) {
-        return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+    public ResponseEntity<Map<String, String>> handleUnauthorizedTokenException(UnauthorizedTokenException e) {
+        return responseError(e.getMessage(), HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<String> handleRuntimeException(RuntimeException e) {
-        return new ResponseEntity<>("오류가 발생했습니다. Error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException e) {
+        return responseError(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    public ResponseEntity<Map<String, String>> responseError(String message, HttpStatus status) {
+        return new ResponseEntity<>(Map.of("message", message), status);
     }
 }
