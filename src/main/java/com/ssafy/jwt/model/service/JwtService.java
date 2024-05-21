@@ -1,15 +1,11 @@
 package com.ssafy.jwt.model.service;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.ssafy.config.dto.JwtDto;
+import com.ssafy.jwt.dto.JwtDto;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Map;
-import java.util.Optional;
 
 public interface JwtService {
 
@@ -19,13 +15,13 @@ public interface JwtService {
 
     String createRefreshToken();
 
-    String validateTokenAndGetUserId(String token);
+    String validateTokenAndGetUserInfo(String token);
 
-    String recreateAccessToken(String oldAccessToken);
+    String recreateAccessToken(String oldAccessToken) throws JsonProcessingException;
 
-    void validateRefreshToken(String refreshToken, String oldAccessToken);
+    void validateRefreshToken(String refreshToken, String oldAccessToken) throws JsonProcessingException;
 
     Jws<Claims> validateAndParseToken(String token);
 
-    Claims decodeJwt(String oldAccessToken);
+    Map<String, Object> decodeJwt(String oldAccessToken) throws JsonProcessingException;
 }

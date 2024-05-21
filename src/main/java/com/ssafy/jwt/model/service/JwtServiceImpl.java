@@ -1,9 +1,8 @@
 package com.ssafy.jwt.model.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.ssafy.config.dto.JwtDto;
-import com.ssafy.user.dto.UserInfoDto;
-import com.ssafy.user.exception.UserNotFoundException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ssafy.jwt.dto.JwtDto;
 import com.ssafy.user.model.mapper.UserMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -11,8 +10,6 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,9 +17,11 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
-import java.util.Optional;
+import java.util.Map;
 
 @Slf4j
 @PropertySource("classpath:config.properties")
@@ -43,6 +42,7 @@ public class JwtServiceImpl implements JwtService {
     @Value("${REFRESH_TOKEN_HEADER}")
     private String refreshTokenHeader;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private static final String ACCESS_TOKEN_SUBJECT = "access-token";
     private static final String REFRESH_TOKEN_SUBJECT = "refresh-token";
 
@@ -79,19 +79,18 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public String validateTokenAndGetUserId(String token) {
-        return validateAndParseToken(token)
-                .getBody()
-                .get("userId", String.class);
+    public String validateTokenAndGetUserInfo(String token) {
+        Claims claims = validateAndParseToken(token).getBody();
+        return claims.get("userId") + ":" + claims.get("role");
     }
 
     @Override
     @Transactional
-    public String recreateAccessToken(String oldAccessToken) {
-        Claims claims = decodeJwt(oldAccessToken);
-        String userId = claims.get("userId", String.class);
-        String email = claims.get("email", String.class);
-        String role = claims.get("role", String.class);
+    public String recreateAccessToken(String oldAccessToken) throws JsonProcessingException {
+        Map<String, Object> claims = decodeJwt(oldAccessToken);
+        String userId = claims.get("userId").toString();
+        String email = claims.get("email").toString();
+        String role = claims.get("role").toString();
 
         String savedRefreshToken = userMapper.findRefreshTokenByUserId(userId);
         if (savedRefreshToken == null) {
@@ -103,9 +102,9 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     @Transactional(readOnly = true)
-    public void validateRefreshToken(String refreshToken, String oldAccessToken) {
+    public void validateRefreshToken(String refreshToken, String oldAccessToken) throws JsonProcessingException {
         validateAndParseToken(refreshToken);
-        String userId = decodeJwt(oldAccessToken).get("userId", String.class);
+        String userId = decodeJwt(oldAccessToken).get("userId").toString();
         String savedRefreshToken = userMapper.findRefreshTokenByUserId(userId);
         if (!refreshToken.equals(savedRefreshToken)) {
             throw new ExpiredJwtException(null, null, "만료된 토큰입니다.");
@@ -122,13 +121,11 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public Claims decodeJwt(String oldAccessToken) {
-        Key key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(oldAccessToken)
-                .getBody();
+    public Map<String, Object> decodeJwt(String oldAccessToken) throws JsonProcessingException {
+        return objectMapper.readValue(
+                new String(Base64.getDecoder().decode(
+                        oldAccessToken.split("\\.")[1]),
+                        StandardCharsets.UTF_8), Map.class);
     }
 
 
