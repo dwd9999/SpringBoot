@@ -1,4 +1,4 @@
-package com.ssafy.config.dto;
+package com.ssafy.jwt.dto;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
