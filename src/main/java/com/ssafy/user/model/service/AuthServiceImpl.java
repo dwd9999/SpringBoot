@@ -1,6 +1,6 @@
 package com.ssafy.user.model.service;
 
-import com.ssafy.config.dto.JwtDto;
+import com.ssafy.jwt.dto.JwtDto;
 import com.ssafy.jwt.model.service.JwtService;
 import com.ssafy.user.dto.*;
 import com.ssafy.user.exception.UserAlreadyExistsException;
@@ -41,7 +41,9 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public LoginResponseDto login(LoginRequestDto loginRequestDto) {
+        log.info("login start: {}", loginRequestDto);
         LoginPwdCheckDto user = userMapper.login(loginRequestDto.getId());
+        log.info("login end: {}", user);
 
         if (user == null || user.isFlag()) {
             throw new UserNotFoundException();
@@ -62,5 +64,16 @@ public class AuthServiceImpl implements AuthService {
                 user.isAdmin(),
                 token.getAccess_token(),
                 token.getRefresh_token());
+    }
+
+    @Override
+    public void findPassword(FindPasswordDto findPasswordDto) {
+        UserInfoDto userInfo = userMapper.getUserInfo(findPasswordDto.getUserId());
+
+        if (userInfo == null || userInfo.isFlag() || !userInfo.getEmail().equals(findPasswordDto.getEmail())) {
+            throw new UserNotFoundException();
+        }
+
+
     }
 }

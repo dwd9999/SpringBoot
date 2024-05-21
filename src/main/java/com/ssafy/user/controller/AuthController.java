@@ -1,5 +1,6 @@
 package com.ssafy.user.controller;
 
+import com.ssafy.user.dto.FindPasswordDto;
 import com.ssafy.user.dto.LoginRequestDto;
 import com.ssafy.user.dto.LoginResponseDto;
 import com.ssafy.user.dto.RegisterRequestDto;
@@ -30,5 +31,11 @@ public class AuthController {
     public ResponseEntity<LoginResponseDto> login(@RequestBody @Validated LoginRequestDto loginRequestDto) {
         LoginResponseDto result = authService.login(loginRequestDto);
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @PostMapping("/lost")
+    public ResponseEntity<?> findPassword(@RequestBody @Validated FindPasswordDto findPasswordDto) {
+        authService.findPassword(findPasswordDto);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
