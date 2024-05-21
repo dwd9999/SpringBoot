@@ -22,13 +22,13 @@ public interface UserMapper {
     @Select("select id, password, name, email, isAdmin, flag " +
             "from enjoytrips.user " +
             "where id = #{id}")
-    LoginPwdCheckDto login(@Param("id") String id);
+    LoginPwdCheckDto login(String id);
 
 
     @Select("select name, email, isAdmin, flag, joinDate " +
             "from enjoytrips.user " +
             "where id = #{id}")
-    UserInfoDto getUserInfo(@Param("id") String id);
+    UserInfoDto getUserInfo(String id);
 
     @Insert("insert into enjoytrips.user_token (user_id, token) " +
             "values (#{userId}, #{refreshToken}) " +
@@ -49,5 +49,7 @@ public interface UserMapper {
             "from enjoytrips.user_token " +
             "where token = #{refreshToken}")
     String findByRefreshToken(String refreshToken);
+
+
 
 }
