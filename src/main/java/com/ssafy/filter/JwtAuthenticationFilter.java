@@ -1,9 +1,11 @@
 package com.ssafy.filter;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ssafy.jwt.model.service.JwtService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,35 +40,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
-            String accessToken = parseBearerToken(request, accessTokenHeader);
+            String accessToken = request.getHeader(accessTokenHeader);
             User user = parseUserSpecification(accessToken);
             AbstractAuthenticationToken authenticated = UsernamePasswordAuthenticationToken.authenticated(user, accessToken, user.getAuthorities());
             authenticated.setDetails(new WebAuthenticationDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authenticated);
         } catch (ExpiredJwtException e) {
             log.info("JWT Token Refresh");
+            request.setAttribute("exception", "토큰이 만료되었습니다.");
             reissueAccessToken(request, response, e);
+        } catch (MalformedJwtException e) {
+            request.setAttribute("exception", "토큰이 손상되었습니다.");
+        } catch (UnsupportedJwtException e) {
+            request.setAttribute("exception", "허용되지 않은 토큰입니다.");
+        } catch (JwtException e) {
+            request.setAttribute("exception", "JWT 에러 발생");
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private String parseBearerToken(HttpServletRequest request, String headerName) {
-        log.info("Get Token From Header");
-        return Optional.ofNullable(request.getHeader(headerName))
-                .filter(token ->
-                        token.startsWith("Bearer "))
-                .map(token ->
-                        token.substring(7))
-                .orElse(null);
-    }
-
     private User parseUserSpecification(String token) {
-        log.info("Get UserInfo From Token");
         String[] split = Optional.ofNullable(token)
-                .filter(subject ->
-                        subject.length() >= 10)
-                .map(jwtService::validateTokenAndGetSubject)
+                .map(jwtService::validateTokenAndGetUserInfo)
                 .orElse("anonymous:anonymous")
                 .split(":");
 
@@ -74,20 +70,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void reissueAccessToken(HttpServletRequest request, HttpServletResponse response, ExpiredJwtException exception) {
-        String refreshToken = parseBearerToken(request, refreshTokenHeader);
-        if (refreshToken == null) {
-            throw exception;
-        }
-        String oldAccessToken = parseBearerToken(request, accessTokenHeader);
+        try {
+            String refreshToken = request.getHeader(refreshTokenHeader);
+            if (refreshToken == null) {
+                throw exception;
+            }
+            String oldAccessToken = request.getHeader(accessTokenHeader);
+            jwtService.validateRefreshToken(refreshToken, oldAccessToken);
+            String newAccessToken = jwtService.recreateAccessToken(oldAccessToken);
+            User user = parseUserSpecification(newAccessToken);
+            AbstractAuthenticationToken authenticated = UsernamePasswordAuthenticationToken.authenticated(user, newAccessToken, user.getAuthorities());
+            authenticated.setDetails(new WebAuthenticationDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authenticated);
 
-    }
-
-    private String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+            response.setHeader("new-access-token", newAccessToken);
+        } catch (ExpiredJwtException e) {
+            request.setAttribute("exception", "토큰이 만료되었습니다.");
+        } catch (MalformedJwtException e) {
+            request.setAttribute("exception", "토큰이 손상되었습니다.");
+        } catch (UnsupportedJwtException e) {
+            request.setAttribute("exception", "허용되지 않은 토큰입니다.");
+        } catch (JwtException e) {
+            request.setAttribute("exception", "JWT 에러 발생");
+        } catch (JsonProcessingException e) {
+            request.setAttribute("exception", "JSON 변환 에러 발생");
         }
-        return null;
     }
 }
 
