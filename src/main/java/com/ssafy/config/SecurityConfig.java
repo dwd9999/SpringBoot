@@ -21,6 +21,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final AuthenticationEntryPoint entryPoint;
 
     private final String[] PUBLIC_URI = {
             "/", "/login", "/register"
@@ -40,6 +41,7 @@ public class SecurityConfig {
                         .requestMatchers(PUBLIC_URI).permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, BasicAuthenticationFilter.class)
+                .exceptionHandling(handler -> handler.authenticationEntryPoint(entryPoint))
                 .build();
     }
 
