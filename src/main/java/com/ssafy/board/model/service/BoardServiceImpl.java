@@ -1,8 +1,6 @@
 package com.ssafy.board.model.service;
 
-import com.ssafy.board.dto.BoardDetailDto;
-import com.ssafy.board.dto.BoardListDto;
-import com.ssafy.board.dto.WriteRequestDto;
+import com.ssafy.board.dto.*;
 import com.ssafy.board.exception.BoardNotFoundException;
 import com.ssafy.board.model.mapper.BoardMapper;
 import com.ssafy.jwt.model.service.JwtService;
@@ -28,17 +26,6 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
-    public BoardDetailDto getBoardDetail(Long article_no) {
-        BoardDetailDto boardDetail = boardMapper.getBoardDetail(article_no);
-
-        if (boardDetail == null) {
-            throw new BoardNotFoundException();
-        }
-
-        return boardDetail;
-    }
-
-    @Override
     public void writeBoard(WriteRequestDto writeRequestDto, User user) {
         if (user.getAuthorities().toString().equals("[ADMIN]")) {
             log.info("공지사항 작성");
@@ -47,5 +34,28 @@ public class BoardServiceImpl implements BoardService {
             log.info("게시글 작성");
             boardMapper.writeBoard(writeRequestDto, user.getUsername());
         }
+    }
+
+    @Override
+    public void updateBoard(UpdateRequestDto updateRequestDto) {
+        getBoardDetail(updateRequestDto.getArticleNo());
+        boardMapper.updateBoard(updateRequestDto);
+    }
+
+    @Override
+    public void deleteBoard(DeleteRequestDto deleteRequestDto) {
+        getBoardDetail(deleteRequestDto.getArticleNo());
+        boardMapper.deleteBoard(deleteRequestDto);
+    }
+
+    @Override
+    public BoardDetailDto getBoardDetail(Long article_no) {
+        BoardDetailDto boardDetail = boardMapper.getBoardDetail(article_no);
+
+        if (boardDetail == null) {
+            throw new BoardNotFoundException();
+        }
+
+        return boardDetail;
     }
 }

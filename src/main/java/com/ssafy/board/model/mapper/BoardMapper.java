@@ -1,11 +1,7 @@
 package com.ssafy.board.model.mapper;
 
-import com.ssafy.board.dto.BoardDetailDto;
-import com.ssafy.board.dto.BoardListDto;
-import com.ssafy.board.dto.WriteRequestDto;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
+import com.ssafy.board.dto.*;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -36,4 +32,13 @@ public interface BoardMapper {
     @Insert("insert into enjoytrips.board(subject, user_id, content, hit, recommendation, comment, date, isnotice) " +
             "value (#{writeRequestDto.subject}, #{userId}, #{writeRequestDto.content}, 0, 0, 0, now(), true)")
     void writeNotice(WriteRequestDto writeRequestDto, String userId);
+
+    @Update("update enjoytrips.board " +
+            "set subject = #{subject}, content = #{content} " +
+            "where article_no = #{articleNo}")
+    void updateBoard(UpdateRequestDto updateRequestDto);
+
+    @Delete("delete from enjoytrips.board " +
+            "where article_no = #{articleNo}")
+    void deleteBoard(DeleteRequestDto deleteRequestDto);
 }

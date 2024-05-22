@@ -16,11 +16,14 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-        log.info("authException: {}", authException.toString());
-
+        log.info("request: {}", request.getAttributeNames());
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("text/plain;charset=UTF-8");
         String exception = (String) request.getAttribute("exception");
-        response.getWriter().write(exception);
+        if (exception == null) {
+            response.getWriter().write(String.valueOf(authException));
+        } else {
+            response.getWriter().write(exception);
+        }
     }
 }

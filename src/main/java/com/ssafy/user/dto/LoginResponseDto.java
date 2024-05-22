@@ -12,4 +12,5 @@ public class LoginResponseDto {
     private final boolean isAdmin;
     private String accessToken;
     private String refreshToken;
+    private String message;
 }

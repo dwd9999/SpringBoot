@@ -30,14 +30,22 @@ public interface UserMapper {
             "where id = #{id}")
     UserInfoDto getUserInfo(String id);
 
+    @Update("update enjoytrips.user " +
+            "set name = #{changeRequestDto.name}, email = #{changeRequestDto.email} " +
+            "where id = #{userId}")
+    void changeUserInfo(ChangeRequestDto changeRequestDto, String userId);
+
+    @Delete("delete from enjoytrips.user " +
+            "where id = #{userId}")
+    void deleteUser(String userId);
+
     @Insert("insert into enjoytrips.user_token (user_id, token) " +
             "values (#{userId}, #{refreshToken}) " +
             "on duplicate key update user_id = #{userId}, token = #{refreshToken}")
     void updateRefreshToken(String userId, String refreshToken);
 
-    @Update("update enjoytrips.user_token " +
-            "set token = null " +
-            "where user_id = ${userId}")
+    @Delete("delete from enjoytrips.user_token " +
+            "where user_id = #{userId}")
     void destroyRefreshToken(String userId);
 
     @Select("select token " +
@@ -49,7 +57,6 @@ public interface UserMapper {
             "from enjoytrips.user_token " +
             "where token = #{refreshToken}")
     String findByRefreshToken(String refreshToken);
-
 
 
 }

@@ -3,6 +3,7 @@ package com.ssafy.user.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -11,6 +12,7 @@ import org.hibernate.validator.constraints.Length;
 @Getter
 @Setter
 @RequiredArgsConstructor
+@AllArgsConstructor
 public class RegisterRequestDto {
     @NotBlank(message = "아이디는 필수 입력 값입니다.")
     @Length(message = "아이디는 4자 이상 10자 미만이어야 합니다.",

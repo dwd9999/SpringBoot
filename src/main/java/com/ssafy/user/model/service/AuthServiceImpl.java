@@ -63,7 +63,8 @@ public class AuthServiceImpl implements AuthService {
                 user.getName(),
                 user.isAdmin(),
                 token.getAccess_token(),
-                token.getRefresh_token());
+                token.getRefresh_token(),
+                "success");
     }
 
     @Override
