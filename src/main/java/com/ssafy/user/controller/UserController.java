@@ -3,10 +3,7 @@ package com.ssafy.user.controller;
 import com.ssafy.jwt.exception.UnauthorizedTokenException;
 import com.ssafy.jwt.model.service.JwtService;
 import com.ssafy.jwt.security.UserAuthorize;
-import com.ssafy.user.dto.LoginRequestDto;
-import com.ssafy.user.dto.LoginResponseDto;
-import com.ssafy.user.dto.RegisterRequestDto;
-import com.ssafy.user.dto.UserInfoDto;
+import com.ssafy.user.dto.*;
 import com.ssafy.user.exception.UserNotFoundException;
 import com.ssafy.user.model.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,13 +16,16 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
+@CrossOrigin
 @RequiredArgsConstructor
 @UserAuthorize
 @RestController
-@RequestMapping
+@RequestMapping("/user")
 public class UserController {
 
     private final UserService userService;
@@ -38,8 +38,37 @@ public class UserController {
     }
 
     @GetMapping("/info/{userId}")
-    public ResponseEntity<UserInfoDto> getUserInfo(@PathVariable("userId") String userId) {
+    public ResponseEntity<Map<String, Object>> getUserInfo(@PathVariable("userId") String userId) {
         UserInfoDto result = userService.getUserInfo(userId);
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        Map<String, Object> response = new HashMap<>();
+        response.put("userInfo", result);
+        response.put("message", "success");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, Object>> logout(@AuthenticationPrincipal User user) {
+        userService.logout(user.getUsername());
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "success");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PatchMapping
+    public ResponseEntity<Map<String, Object>> changeUserInfo(@AuthenticationPrincipal User user,
+                                                              @RequestBody ChangeRequestDto changeRequestDto) {
+        userService.changeUserInfo(user.getUsername(), changeRequestDto);
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "success");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Map<String, Object>> deleteUser(@AuthenticationPrincipal User user) {
+        userService.logout(user.getUsername());
+        userService.deleteUser(user.getUsername());
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "success");
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

@@ -24,10 +24,28 @@ public class UserServiceImpl implements UserService {
     public UserInfoDto getUserInfo(String id) {
         UserInfoDto result = userMapper.getUserInfo(id);
 
-        if (result == null) {
+        if (result == null || result.isFlag()) {
             throw new UserNotFoundException();
         }
 
         return userMapper.getUserInfo(id);
+    }
+
+    @Override
+    @Transactional
+    public void logout(String userId) {
+        userMapper.destroyRefreshToken(userId);
+    }
+
+    @Override
+    @Transactional
+    public void changeUserInfo(String userId, ChangeRequestDto changeRequestDto) {
+        userMapper.changeUserInfo(changeRequestDto, userId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteUser(String userId) {
+        userMapper.deleteUser(userId);
     }
 }
