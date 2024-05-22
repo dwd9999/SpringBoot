@@ -1,9 +1,8 @@
 package com.ssafy.board.controller;
 
-import com.ssafy.board.dto.BoardDetailDto;
-import com.ssafy.board.dto.BoardListDto;
-import com.ssafy.board.dto.WriteRequestDto;
+import com.ssafy.board.dto.*;
 import com.ssafy.board.model.service.BoardService;
+import com.ssafy.jwt.security.UserAuthorize;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,9 +10,13 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+@CrossOrigin
 @RequiredArgsConstructor
+@UserAuthorize
 @RequestMapping("/board")
 @RestController
 public class BoardController {
@@ -21,20 +24,38 @@ public class BoardController {
     private final BoardService boardService;
 
     @GetMapping
-    public ResponseEntity<List<BoardListDto>> getBoardList() {
+    public ResponseEntity<Map<String, Object>> getBoardList() {
         List<BoardListDto> result = boardService.getBoardList();
-        return new ResponseEntity<>(result, HttpStatus.OK);
-    }
-
-    @GetMapping("/{articleNo}")
-    public ResponseEntity<BoardDetailDto> getBoardDetail(@PathVariable("articleNo") Long articleNo) {
-        BoardDetailDto result = boardService.getBoardDetail(articleNo);
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        Map<String, Object> response = new HashMap<>();
+        response.put("list", result);
+        response.put("message", "success");
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping
     public ResponseEntity<?> writeBoard(@RequestBody WriteRequestDto writeRequestDto, @AuthenticationPrincipal User user) {
         boardService.writeBoard(writeRequestDto, user);
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PatchMapping
+    public ResponseEntity<?> updateBoard(@RequestBody UpdateRequestDto updateRequestDto) {
+        boardService.updateBoard(updateRequestDto);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @DeleteMapping
+    public ResponseEntity<?> deleteBoard(@RequestBody DeleteRequestDto deleteRequestDto) {
+        boardService.deleteBoard(deleteRequestDto);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @GetMapping("/{articleNo}")
+    public ResponseEntity<Map<String, Object>> getBoardDetail(@PathVariable("articleNo") Long articleNo) {
+        BoardDetailDto result = boardService.getBoardDetail(articleNo);
+        Map<String, Object> response = new HashMap<>();
+        response.put("board", result);
+        response.put("message", "success");
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
