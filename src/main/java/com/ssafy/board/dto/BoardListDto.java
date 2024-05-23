@@ -1,13 +1,13 @@
 package com.ssafy.board.dto;
 
-import lombok.Builder;
+import lombok.Setter;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Date;
 
 @Getter
-@Builder
+@Setter
 @RequiredArgsConstructor
 public class BoardListDto {
     private final Long articleNo;
