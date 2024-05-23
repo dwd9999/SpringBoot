@@ -2,6 +2,7 @@ package com.ssafy.user.model.service;
 
 import com.ssafy.jwt.dto.JwtDto;
 import com.ssafy.jwt.model.service.JwtService;
+import com.ssafy.mail.model.service.MailService;
 import com.ssafy.user.dto.*;
 import com.ssafy.user.exception.UserAlreadyExistsException;
 import com.ssafy.user.exception.UserNotFoundException;
@@ -13,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Random;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -20,37 +23,36 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserMapper userMapper;
     private final JwtService jwtService;
+    private final MailService mailService;
     private final PasswordEncoder encoder;
 
     @Override
     @Transactional
-    public void register(RegisterRequestDto registerRequestDto) {
+    public Integer register(RegisterRequestDto registerRequestDto) {
         registerRequestDto.setPassword(encoder.encode(registerRequestDto.getPassword()));
         UserInfoDto userInfo = userMapper.getUserInfo(registerRequestDto.getId());
 
         if (userInfo != null) {
             if (!userInfo.isFlag()) {
-                throw new UserAlreadyExistsException();
+                return 0;
             }
             userMapper.registerAgain(registerRequestDto);
+        } else {
+            userMapper.register(registerRequestDto);
         }
 
-        userMapper.register(registerRequestDto);
+        return 1;
     }
 
     @Override
     @Transactional
     public LoginResponseDto login(LoginRequestDto loginRequestDto) {
-        log.info("login start: {}", loginRequestDto);
         LoginPwdCheckDto user = userMapper.login(loginRequestDto.getId());
-        log.info("login end: {}", user);
 
         if (user == null || user.isFlag()) {
             throw new UserNotFoundException();
         }
 
-        log.info("request password: {}", loginRequestDto.getPassword());
-        log.info("user password: {}", user.getPassword());
         if (!encoder.matches(loginRequestDto.getPassword(), user.getPassword())) {
             throw new UserWrongPasswordException();
         }
@@ -68,13 +70,34 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void findPassword(FindPasswordDto findPasswordDto) {
+    public Integer findPassword(FindPasswordDto findPasswordDto) {
         UserInfoDto userInfo = userMapper.getUserInfo(findPasswordDto.getUserId());
 
         if (userInfo == null || userInfo.isFlag() || !userInfo.getEmail().equals(findPasswordDto.getEmail())) {
-            throw new UserNotFoundException();
+            return 0;
         }
 
+        Random random = new Random();
+        String generatedPassword = random.ints(48, 123)
+                .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
+                .limit(13)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString();
 
+        mailService.sendNewPassword(userInfo.getEmail(), generatedPassword);
+        userMapper.changePassword(findPasswordDto.getUserId(), encoder.encode(generatedPassword));
+
+        return 1;
+
+    }
+
+    @Override
+    public Integer isIdDuplicate(String userId) {
+        UserInfoDto result = userMapper.getUserInfo(userId);
+        if (result == null) {
+            return 0;
+        } else {
+            return 1;
+        }
     }
 }

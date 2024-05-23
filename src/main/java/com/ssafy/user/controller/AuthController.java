@@ -20,9 +20,8 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody @Validated RegisterRequestDto registerRequestDto) {
-        authService.register(registerRequestDto);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+    public ResponseEntity<Integer> register(@RequestBody @Validated RegisterRequestDto registerRequestDto) {
+        return new ResponseEntity<>(authService.register(registerRequestDto), HttpStatus.OK);
     }
 
     @PostMapping("/login")
@@ -31,9 +30,13 @@ public class AuthController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
+    @GetMapping("/checkId/{userId}")
+    public ResponseEntity<Integer> checkId(@PathVariable("userId") String userId) {
+        return new ResponseEntity<>(authService.isIdDuplicate(userId), HttpStatus.OK);
+    }
+
     @PostMapping("/lost")
-    public ResponseEntity<?> findPassword(@RequestBody @Validated FindPasswordDto findPasswordDto) {
-        authService.findPassword(findPasswordDto);
-        return new ResponseEntity<>(HttpStatus.OK);
+    public ResponseEntity<Integer> findPassword(@RequestBody @Validated FindPasswordDto findPasswordDto) {
+        return new ResponseEntity<>(authService.findPassword(findPasswordDto), HttpStatus.OK);
     }
 }

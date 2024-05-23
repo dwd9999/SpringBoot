@@ -7,10 +7,12 @@ import com.ssafy.user.dto.RegisterRequestDto;
 
 public interface AuthService {
 
-    void register(RegisterRequestDto registerRequestDto);
+    Integer register(RegisterRequestDto registerRequestDto);
 
     LoginResponseDto login(LoginRequestDto loginRequestDto);
 
-    void findPassword(FindPasswordDto findPasswordDto);
-    
+    Integer findPassword(FindPasswordDto findPasswordDto);
+
+    Integer isIdDuplicate(String userId);
+
 }
