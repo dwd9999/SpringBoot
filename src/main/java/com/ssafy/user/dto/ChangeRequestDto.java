@@ -7,7 +7,7 @@ import lombok.*;
 import org.hibernate.validator.constraints.Length;
 
 @Getter
-@Builder
+@Setter
 @RequiredArgsConstructor
 public class ChangeRequestDto {
     @NotBlank(message = "이름은 필수 입력 값입니다.")

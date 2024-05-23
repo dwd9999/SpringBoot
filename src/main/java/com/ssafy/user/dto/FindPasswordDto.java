@@ -3,13 +3,13 @@ package com.ssafy.user.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.hibernate.validator.constraints.Length;
 
 @Getter
-@Builder
+@Setter
 @RequiredArgsConstructor
 public class FindPasswordDto {
     @NotBlank(message = "아이디는 필수 입력 값입니다.")
