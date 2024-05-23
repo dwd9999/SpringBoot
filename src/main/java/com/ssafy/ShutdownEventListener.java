@@ -15,9 +15,9 @@ public class ShutdownEventListener implements ApplicationListener<ContextClosedE
 
     @Override
     public void onApplicationEvent(ContextClosedEvent event) {
-        userMapper.destroyRefreshToken("test");
-        userMapper.destroyRefreshToken("user");
-        userMapper.deleteUser("test");
-        userMapper.deleteUser("user");
+        userMapper.destroyRefreshToken("gadin8631");
+        userMapper.destroyRefreshToken("juwon");
+        userMapper.deleteUser("gadin8631");
+        userMapper.deleteUser("juwon");
     }
 }

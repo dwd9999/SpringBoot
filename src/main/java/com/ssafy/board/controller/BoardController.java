@@ -2,7 +2,6 @@ package com.ssafy.board.controller;
 
 import com.ssafy.board.dto.*;
 import com.ssafy.board.model.service.BoardService;
-import com.ssafy.jwt.security.UserAuthorize;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +15,6 @@ import java.util.Map;
 
 @CrossOrigin
 @RequiredArgsConstructor
-@UserAuthorize
 @RequestMapping("/board")
 @RestController
 public class BoardController {

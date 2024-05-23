@@ -20,16 +20,16 @@ public class TestInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         userMapper.registerAdmin(
-                "test",
-                encoder.encode("test"),
-                "test",
-                "test@test.com");
+                "juwon",
+                encoder.encode("1234"),
+                "오주원",
+                "ojw1010@gmail.com");
 
         userMapper.register(new RegisterRequestDto(
-                "user",
-                encoder.encode("user"),
-                "user",
-                "user@user.com"));
+                "gadin8631",
+                encoder.encode("1234"),
+                "강다영",
+                "gadin8631@naver.com"));
 
         boardMapper.writeNotice(new WriteRequestDto(
                         "Test Notice",

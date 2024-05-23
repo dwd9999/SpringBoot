@@ -35,6 +35,11 @@ public interface UserMapper {
             "where id = #{userId}")
     void changeUserInfo(ChangeRequestDto changeRequestDto, String userId);
 
+    @Update("update enjoytrips.user " +
+            "set password = #{password} " +
+            "where id = #{userId}")
+    void changePassword(String userId, String password);
+
     @Delete("delete from enjoytrips.user " +
             "where id = #{userId}")
     void deleteUser(String userId);
