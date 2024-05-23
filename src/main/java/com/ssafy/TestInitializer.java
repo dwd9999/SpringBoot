@@ -2,6 +2,7 @@ package com.ssafy;
 
 import com.ssafy.board.dto.WriteRequestDto;
 import com.ssafy.board.model.mapper.BoardMapper;
+import com.ssafy.notice.model.mapper.NoticeMapper;
 import com.ssafy.user.dto.RegisterRequestDto;
 import com.ssafy.user.model.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 public class TestInitializer implements CommandLineRunner {
 
     private final UserMapper userMapper;
+    private final NoticeMapper noticeMapper;
     private final BoardMapper boardMapper;
     private final PasswordEncoder encoder;
 
@@ -27,11 +29,11 @@ public class TestInitializer implements CommandLineRunner {
 
         userMapper.register(new RegisterRequestDto(
                 "gadin8631",
-                encoder.encode("1234"),
+                "1234",
                 "강다영",
-                "gadin8631@naver.com"));
+                "gadin8631@naver.com"), encoder.encode("1234"));
 
-        boardMapper.writeNotice(new WriteRequestDto(
+        noticeMapper.writeNotice(new WriteRequestDto(
                         "Test Notice",
                         "Test Notice Content"),
                 "test");

@@ -6,6 +6,7 @@ import com.ssafy.user.dto.LoginResponseDto;
 import com.ssafy.user.dto.RegisterRequestDto;
 import com.ssafy.user.model.service.AuthService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -20,8 +21,9 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<Integer> register(@RequestBody @Validated RegisterRequestDto registerRequestDto) {
-        return new ResponseEntity<>(authService.register(registerRequestDto), HttpStatus.OK);
+    public ResponseEntity<?> register(@RequestBody @Validated RegisterRequestDto registerRequestDto) {
+        authService.register(registerRequestDto);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/login")

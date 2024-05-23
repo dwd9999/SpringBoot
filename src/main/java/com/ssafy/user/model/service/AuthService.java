@@ -7,7 +7,7 @@ import com.ssafy.user.dto.RegisterRequestDto;
 
 public interface AuthService {
 
-    Integer register(RegisterRequestDto registerRequestDto);
+    void register(RegisterRequestDto registerRequestDto);
 
     LoginResponseDto login(LoginRequestDto loginRequestDto);
 

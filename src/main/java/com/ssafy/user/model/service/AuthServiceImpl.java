@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.Random;
 
@@ -28,20 +29,17 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public Integer register(RegisterRequestDto registerRequestDto) {
-        registerRequestDto.setPassword(encoder.encode(registerRequestDto.getPassword()));
+    public void register(RegisterRequestDto registerRequestDto) {
         UserInfoDto userInfo = userMapper.getUserInfo(registerRequestDto.getId());
 
         if (userInfo != null) {
             if (!userInfo.isFlag()) {
-                return 0;
+                throw new UserAlreadyExistsException();
             }
-            userMapper.registerAgain(registerRequestDto);
+            userMapper.registerAgain(registerRequestDto, encoder.encode(registerRequestDto.getPassword()));
         } else {
-            userMapper.register(registerRequestDto);
+            userMapper.register(registerRequestDto, encoder.encode(registerRequestDto.getPassword()));
         }
-
-        return 1;
     }
 
     @Override
