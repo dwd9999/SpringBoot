@@ -27,13 +27,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     public void writeBoard(WriteRequestDto writeRequestDto, User user) {
-        if (user.getAuthorities().toString().equals("[ADMIN]")) {
-            log.info("공지사항 작성");
-            boardMapper.writeNotice(writeRequestDto, user.getUsername());
-        } else {
-            log.info("게시글 작성");
-            boardMapper.writeBoard(writeRequestDto, user.getUsername());
-        }
+        boardMapper.writeBoard(writeRequestDto, user.getUsername());
     }
 
     @Override

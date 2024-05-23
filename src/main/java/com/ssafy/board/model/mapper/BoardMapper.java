@@ -14,12 +14,6 @@ public interface BoardMapper {
             "order by article_no desc")
     List<BoardListDto> getBoardList();
 
-    @Select("select article_no, user_id, subject, hit, date " +
-            "from enjoytrips.board " +
-            "where isnotice = true " +
-            "order by article_no desc")
-    List<BoardListDto> getNoticeList();
-
     @Select("select article_no, subject, user_id, content, hit, recommendation, date " +
             "from enjoytrips.board " +
             "where article_no = #{article_no}")
@@ -29,9 +23,7 @@ public interface BoardMapper {
             "value (#{writeRequestDto.subject}, #{userId}, #{writeRequestDto.content}, 0, 0, 0, now(), false)")
     void writeBoard(WriteRequestDto writeRequestDto, String userId);
 
-    @Insert("insert into enjoytrips.board(subject, user_id, content, hit, recommendation, comment, date, isnotice) " +
-            "value (#{writeRequestDto.subject}, #{userId}, #{writeRequestDto.content}, 0, 0, 0, now(), true)")
-    void writeNotice(WriteRequestDto writeRequestDto, String userId);
+
 
     @Update("update enjoytrips.board " +
             "set subject = #{subject}, content = #{content} " +

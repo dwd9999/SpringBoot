@@ -6,13 +6,13 @@ import org.apache.ibatis.annotations.*;
 @Mapper
 public interface UserMapper {
     @Insert("insert into enjoytrips.user (id, password, name, email, isAdmin, flag, joinDate) " +
-            "values (#{id}, #{password}, #{name}, #{email}, false, false, now());")
-    void register(RegisterRequestDto registerRequestDto);
+            "values (#{registerRequestDto.id}, #{password}, #{registerRequestDto.name}, #{registerRequestDto.email}, false, false, now());")
+    void register(RegisterRequestDto registerRequestDto, String password);
 
     @Update("update enjoytrips.user " +
-            "set password = #{password}, name = #{name}, email = #{email}, isAdmin = false, flag = false, joinDate = now()" +
-            "where id = #{id}")
-    void registerAgain(RegisterRequestDto registerRequestDto);
+            "set password = #{password}, name = #{registerRequestDto.name}, email = #{registerRequestDto.email}, isAdmin = false, flag = false, joinDate = now()" +
+            "where id = #{registerRequestDto.id}")
+    void registerAgain(RegisterRequestDto registerRequestDto, String password);
 
     @Insert("insert into enjoytrips.user (id, password, name, email, isAdmin, flag, joinDate) " +
             "values (#{id}, #{password}, #{name}, #{email}, true, false, now()) " +
