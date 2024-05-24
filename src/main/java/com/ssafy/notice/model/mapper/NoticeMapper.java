@@ -23,6 +23,6 @@ public interface NoticeMapper {
     NoticeDetailDto getNoticeDetail(Long article_no);
 
     @Insert("insert into enjoytrips.board(subject, user_id, content, hit, recommendation, comment, date, isnotice) " +
-            "value (#{writeRequestDto.subject}, #{userId}, #{writeRequestDto.content}, 0, 0, 0, now(), true)")
-    void writeNotice(WriteRequestDto writeRequestDto, String userId);
+            "value (#{subject}, #{id}, #{content}, 0, 0, 0, now(), true)")
+    void writeNotice(WriteRequestDto writeRequestDto);
 }

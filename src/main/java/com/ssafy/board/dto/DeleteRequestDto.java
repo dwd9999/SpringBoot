@@ -1,12 +1,11 @@
 package com.ssafy.board.dto;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
-@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
 public class DeleteRequestDto {
-    private final Long articleNo;
+    private Long articleNo;
 }

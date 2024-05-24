@@ -31,8 +31,8 @@ public class BoardController {
     }
 
     @PostMapping
-    public ResponseEntity<?> writeBoard(@RequestBody WriteRequestDto writeRequestDto, @AuthenticationPrincipal User user) {
-        boardService.writeBoard(writeRequestDto, user);
+    public ResponseEntity<?> writeBoard(@RequestBody WriteRequestDto writeRequestDto) {
+        boardService.writeBoard(writeRequestDto);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -42,7 +42,7 @@ public class BoardController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @DeleteMapping
+    @PostMapping("/delete")
     public ResponseEntity<?> deleteBoard(@RequestBody DeleteRequestDto deleteRequestDto) {
         boardService.deleteBoard(deleteRequestDto);
         return new ResponseEntity<>(HttpStatus.OK);

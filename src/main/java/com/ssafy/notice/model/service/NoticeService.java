@@ -11,7 +11,7 @@ public interface NoticeService {
 
     List<NoticeListDto> getNoticeList();
 
-    void writeBoard(WriteRequestDto writeRequestDto, User user);
+    void writeBoard(WriteRequestDto writeRequestDto);
 
     NoticeDetailDto getNoticeDetail(Long article_no);
 }

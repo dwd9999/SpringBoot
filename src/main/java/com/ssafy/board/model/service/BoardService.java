@@ -9,7 +9,7 @@ public interface BoardService {
 
     List<BoardListDto> getBoardList();
 
-    void writeBoard(WriteRequestDto writeRequestDto, User user);
+    void writeBoard(WriteRequestDto writeRequestDto);
 
     void updateBoard(UpdateRequestDto updateRequestDto);
 

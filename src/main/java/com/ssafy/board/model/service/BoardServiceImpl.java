@@ -26,8 +26,8 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
-    public void writeBoard(WriteRequestDto writeRequestDto, User user) {
-        boardMapper.writeBoard(writeRequestDto, user.getUsername());
+    public void writeBoard(WriteRequestDto writeRequestDto) {
+        boardMapper.writeBoard(writeRequestDto);
     }
 
     @Override

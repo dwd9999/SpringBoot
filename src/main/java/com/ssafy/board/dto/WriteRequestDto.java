@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 @Setter
 @RequiredArgsConstructor
 public class WriteRequestDto {
+    private final String id;
     private final String subject;
     private final String content;
 }

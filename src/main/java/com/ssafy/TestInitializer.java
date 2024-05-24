@@ -33,16 +33,6 @@ public class TestInitializer implements CommandLineRunner {
                 "강다영",
                 "gadin8631@naver.com"), encoder.encode("1234"));
 
-        noticeMapper.writeNotice(new WriteRequestDto(
-                        "Test Notice",
-                        "Test Notice Content"),
-                "test");
-
-        boardMapper.writeBoard(new WriteRequestDto(
-                        "Test Board",
-                        "Test Board Content"),
-                "user");
-
 
     }
 }

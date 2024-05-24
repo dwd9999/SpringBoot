@@ -1,13 +1,11 @@
 package com.ssafy.notice.model.service;
 
-import com.ssafy.board.dto.BoardDetailDto;
 import com.ssafy.board.dto.WriteRequestDto;
 import com.ssafy.board.exception.BoardNotFoundException;
 import com.ssafy.notice.dto.NoticeDetailDto;
 import com.ssafy.notice.dto.NoticeListDto;
 import com.ssafy.notice.model.mapper.NoticeMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,12 +22,8 @@ public class NoticeServiceImpl implements NoticeService {
     }
 
     @Override
-    public void writeBoard(WriteRequestDto writeRequestDto, User user) {
-        if (!user.getAuthorities().toString().equals("[ADMIN]")) {
-            return;
-        }
-
-        noticeMapper.writeNotice(writeRequestDto, user.getUsername());
+    public void writeBoard(WriteRequestDto writeRequestDto) {
+        noticeMapper.writeNotice(writeRequestDto);
     }
 
     @Override

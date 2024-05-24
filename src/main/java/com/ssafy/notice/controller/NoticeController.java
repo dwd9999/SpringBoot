@@ -33,8 +33,8 @@ public class NoticeController {
     }
 
     @PostMapping
-    public ResponseEntity<?> writeNotice(@RequestBody WriteRequestDto writeRequestDto, @AuthenticationPrincipal User user) {
-        noticeService.writeBoard(writeRequestDto, user);
+    public ResponseEntity<?> writeNotice(@RequestBody WriteRequestDto writeRequestDto) {
+        noticeService.writeBoard(writeRequestDto);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
